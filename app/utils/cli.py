@@ -79,11 +79,11 @@ class AgentCLI:
 
                     # 处理回调响应
                     if isinstance(response, str):
-                        print(HTML(f"<output>assistant > {response}</output>"))
+                        print(f"""{response}""")
                     elif isinstance(response, dict):
                         self._print_dict_response(response)
                     elif response is not None:
-                        print(HTML(f"<output>assistant > {response}</output>"))
+                        print(HTML(f"{response}"))
 
                 except KeyboardInterrupt:
                     self.running = False
@@ -96,14 +96,14 @@ class AgentCLI:
 
     def _print_welcome(self) -> None:
         """打印欢迎信息"""
-        print(HTML(
-            "<ansiyellow>"
-            "============================================\n"
-            "       AI Agent 系统 - 交互式命令行          \n"
-            "============================================\n"
-            "输入您的问题或指令，或输入 'exit' 退出\n"
-            "</ansiyellow>"
-        ))
+        print(
+            """
+            ============================================\n
+                   AI Agent 系统 - 交互式命令行          \n
+            ============================================\n
+            输入您的问题或指令，或输入 'exit' 退出\n
+            """
+        )
 
     def _print_dict_response(self, response: Dict[str, Any]) -> None:
         """打印字典类型的响应"""

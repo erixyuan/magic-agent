@@ -37,6 +37,33 @@ class AgentSession:
 
         # 活动会话缓存
         self.active_sessions: Dict[str, BaseAgent] = {}
+        
+        # 清理默认会话文件
+        self._cleanup_default_session()
+
+    def _cleanup_default_session(self):
+        """清理默认会话文件
+        
+        删除名为"default"的会话文件，以及对应的Agent状态文件
+        """
+        # 清理会话元数据
+        default_metadata_file = os.path.join(self.sessions_dir, "default.json")
+        if os.path.exists(default_metadata_file):
+            try:
+                os.remove(default_metadata_file)
+                logger.info("已删除默认会话元数据文件")
+            except Exception as e:
+                logger.error(f"删除默认会话元数据文件失败: {e}", exc_info=True)
+        
+        # 清理Agent状态文件
+        data_dir = get_config("agent.data_dir", "data/agents")
+        default_state_file = os.path.join(data_dir, "default_state.json")
+        if os.path.exists(default_state_file):
+            try:
+                os.remove(default_state_file)
+                logger.info("已删除默认Agent状态文件")
+            except Exception as e:
+                logger.error(f"删除默认Agent状态文件失败: {e}", exc_info=True)
 
     async def create_session(
             self,
@@ -56,6 +83,11 @@ class AgentSession:
         Returns:
             创建的Agent实例
         """
+        # 不再接受"default"作为会话ID
+        if session_id == "default":
+            logger.warning("不再支持'default'作为会话ID，将生成新的会话ID")
+            session_id = None
+            
         session_id = session_id or str(uuid.uuid4())
 
         # 检查是否已存在
@@ -96,6 +128,11 @@ class AgentSession:
         Returns:
             Agent实例，如果不存在则返回None
         """
+        # 不再接受"default"作为会话ID
+        if session_id == "default":
+            logger.warning("不再支持'default'作为会话ID")
+            return None
+            
         # 检查是否在活动会话中
         if session_id in self.active_sessions:
             return self.active_sessions[session_id]

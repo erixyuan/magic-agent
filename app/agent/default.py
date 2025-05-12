@@ -2,6 +2,7 @@
 默认Agent实现 - 基础功能的参考实现
 """
 import asyncio
+import pdb
 from typing import Dict, Any, List, Optional
 from app.agent.base import BaseAgent
 from app.agent.state import Message, MessageRole
@@ -49,6 +50,9 @@ class DefaultAgent(BaseAgent):
         else:
             # 父类初始化中会设置持久化，所以这里只需初始化基础组件
             self._init_persistence()
+            # 清除历史消息，保留系统消息
+            logger.debug(f"加载到历史消息 {len(self.state.messages)} 条，清除非系统消息")
+            self.clear_history(keep_system=True)
 
         # 初始化LLM
         try:
@@ -94,7 +98,9 @@ class DefaultAgent(BaseAgent):
 
         # 调用LLM生成回复
         try:
+            logger.info(f"""发送给LLM : {truncated_messages}""")
             response = await self.llm.generate_chat_completion(truncated_messages)
+            logger.info(f"LLM生成回复: {response}")
             return response
         except Exception as e:
             logger.error(f"LLM调用失败: {e}", exc_info=True)

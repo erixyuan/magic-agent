@@ -3,6 +3,7 @@ Agent抽象基类 - 定义所有Agent实现的通用接口
 """
 import abc
 import asyncio
+import pdb
 import uuid
 from typing import Dict, Any, List, Optional, Union, Callable
 from datetime import datetime
@@ -290,10 +291,6 @@ class BaseAgent(abc.ABC):
         # 记录状态变化
         if old_status != status:
             logger.debug(f"Agent状态直接设置: {old_status} -> {status}")
-            
-    async def notify_state_change(self) -> None:
-        """手动触发状态变化通知"""
-        await self._notify_state_change()
 
     async def _change_state(self, status: str, **kwargs) -> None:
         """更改Agent状态

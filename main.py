@@ -8,6 +8,7 @@ from app.agent import create_agent
 from typing import Dict, Any, Optional
 import logging
 import signal
+import uuid
 
 from app.agent.session import AgentSession
 from app.utils.logger import setup_logger
@@ -16,6 +17,8 @@ from app.utils.cli import AgentCLI
 
 # 全局会话管理器
 session_manager: Optional[AgentSession] = None
+# 当前CLI会话ID
+current_cli_session_id: Optional[str] = None
 
 
 async def handle_agent_request(session_id: str, user_input: str) -> Any:
@@ -41,9 +44,15 @@ async def handle_agent_request(session_id: str, user_input: str) -> Any:
 
 async def agent_callback(user_input: str) -> Any:
     """CLI回调函数"""
-    # 使用默认会话
-    default_session = "default"
-    return await handle_agent_request(default_session, user_input)
+    global current_cli_session_id, session_manager
+    
+    # 第一次调用时创建新的会话ID
+    if current_cli_session_id is None:
+        current_cli_session_id = str(uuid.uuid4())
+        logger = logging.getLogger("main")
+        logger.info(f"创建新会话: {current_cli_session_id}")
+    
+    return await handle_agent_request(current_cli_session_id, user_input)
 
 
 async def cleanup(signal=None):
@@ -69,7 +78,7 @@ async def main():
     parser = argparse.ArgumentParser(description='Magic Agent')
     parser.add_argument('--config', type=str, default='config/config.toml', help='配置文件路径')
     parser.add_argument('--debug', action='store_true', help='启用调试模式')
-    parser.add_argument("--session", type=str, default="default", help="会话ID")
+    parser.add_argument("--session", type=str, help="会话ID，如不提供则自动生成")
     parser.add_argument("--no-cli", action="store_true", help="禁用交互式CLI")
     args = parser.parse_args()
     print(args)
@@ -105,9 +114,10 @@ async def main():
         session_manager = AgentSession()
         if args.no_cli:
             # 非交互模式
-            agent = await session_manager.get_session(args.session)
+            session_id = args.session or str(uuid.uuid4())
+            agent = await session_manager.get_session(session_id)
             if not agent:
-                agent = await session_manager.create_session(session_id=args.session)
+                agent = await session_manager.create_session(session_id=session_id)
 
             await agent.run()
         else:
