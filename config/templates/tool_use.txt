@@ -1,0 +1,17 @@
+请使用工具回答以下问题：
+
+用户消息：{{user_message}}
+
+可用工具：
+{% for tool in tools %}
+- {{tool.name}}: {{tool.description}}
+{% endfor %}
+
+工具参数信息：
+{% for tool in tools %}
+{{tool.name}} 参数：
+{{tool.parameters}}
+
+{% endfor %}
+
+选择最合适的工具，指定所有必要的参数，然后说明为什么选择这个工具。

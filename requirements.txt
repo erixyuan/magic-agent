@@ -1,0 +1,33 @@
+# 基础依赖
+pyyaml>=6.0
+pydantic>=2.0.0
+tomli>=2.0.0  # 用于解析TOML配置
+
+# CLI界面
+prompt_toolkit>=3.0.0
+
+# 异步支持
+aiohttp>=3.8.0
+
+# LLM接口 - 根据需要安装
+openai>=1.0.0
+anthropic>=0.5.0  # 可选，使用Claude时需要
+# aioboto3>=11.0.0  # 可选，使用AWS Bedrock时需要
+# boto3>=1.28.0     # 可选，使用AWS Bedrock时需要
+
+# Token计数
+tiktoken>=0.5.0
+
+# 模板系统
+jinja2>=3.0.0
+
+# 工具支持
+beautifulsoup4>=4.10.0
+playwright>=1.30.0
+
+# 测试
+pytest>=7.0.0
+pytest-asyncio>=0.18.0
+
+# backoff
+backoff

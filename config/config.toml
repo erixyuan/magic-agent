@@ -1,0 +1,125 @@
+# 系统全局配置
+[system]
+name = "MyAIAgent"
+version = "0.1.0"
+debug = true  # 开启调试模式
+
+# 日志配置
+[logging]
+level = "DEBUG"
+format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+file = "logs/agent.log"
+
+# Agent配置
+[agent]
+type = "default"
+state_file = "data/agent_state.json"
+max_steps = 10
+auto_save = true
+data_dir = "data/agents"
+sessions_dir = "data/sessions"
+max_idle_loops = 20  # 主循环最大空闲迭代次数
+save_interval = 5.0  # 保存状态的最小间隔(秒)
+
+# LLM配置 - OpenAI
+# [llm]
+# api_type = "openai"
+# model = "gpt-4"
+# api_key = "sk-your-openai-key"
+# max_tokens = 4096
+# temperature = 0.7
+# reserved_tokens = 1000
+
+# LLM配置 - PPIO
+[llm]
+api_type = "ppio"
+model = "deepseek/deepseek-v3-0324"
+base_url = "https://api.ppinfra.com/v3/openai"
+api_key = "sk_augO5g8Bs94XhtqG8yJRE2bDhOg02MPz9fiYuD1wiZ8"
+max_tokens = 16000
+temperature = 0.0
+reserved_tokens = 1000
+
+# LLM配置 - Claude
+# [llm]
+# api_type = "claude"
+# model = "claude-3-sonnet-20240229"
+# api_key = "sk-your-anthropic-key"
+# max_tokens = 100000
+# temperature = 0.7
+# reserved_tokens = 1000
+
+# LLM配置 - AWS Bedrock
+# [llm]
+# api_type = "aws"
+# model = "anthropic.claude-3-sonnet-20240229-v1:0"
+# region_name = "us-west-2"
+# max_tokens = 8192
+# temperature = 0.7
+
+# LLM配置 - Azure OpenAI
+# [llm]
+# api_type = "azure"
+# model = "gpt-4o"
+# base_url = "https://your-resource.openai.azure.com"
+# api_key = "your-azure-api-key"
+# api_version = "2023-05-15"
+# max_tokens = 8192
+# temperature = 0.7
+
+# LLM配置 - Ollama
+# [llm]
+# api_type = "ollama"
+# model = "llama3.2"
+# base_url = "http://localhost:11434/v1"
+# max_tokens = 4096
+# temperature = 0.7
+
+# 视觉模型配置 - PPIO Vision
+#[llm.vision]
+#api_type = "ppio"
+#model = "qwen/qwen2.5-vl-72b-instruct"
+#base_url = "https://api.ppinfra.com/v3/openai"
+#api_key = "sk-your-ppio-key"
+#max_tokens = 96000
+#temperature = 0.0
+
+
+# 工具配置
+[tools]
+enabled = ["file_tool", "web_tool", "python_tool"]
+auto_discover = true
+
+# 提示模板配置
+[templates]
+dir = "config/templates"
+
+# 浏览器配置
+[browser]
+headless = false
+disable_security = true
+timeout = 30000  # 30秒
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+
+# 浏览器代理配置
+# [browser.proxy]
+# server = "http://proxy-server:port"
+# username = "proxy-username"
+# password = "proxy-password"
+
+# 沙箱配置
+[sandbox]
+use_sandbox = false
+image = "python:3.12-slim"
+work_dir = "/workspace"
+memory_limit = "1g"
+cpu_limit = 2.0
+timeout = 300
+network_enabled = true
+
+# MCP配置
+[mcp]
+enabled = true
+host = "127.0.0.1"
+port = 8080
+server_reference = "app.mcp.server"

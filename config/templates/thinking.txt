@@ -1,0 +1,12 @@
+请思考如何回答以下问题或执行以下任务：
+
+用户消息：{{user_message}}
+
+{% if tools %}
+你可以使用的工具有：
+{% for tool in tools %}
+- {{tool.name}}: {{tool.description}}
+{% endfor %}
+{% endif %}
+
+仔细分析问题，并提供最佳回答。如果需要使用工具，请选择最合适的工具。
