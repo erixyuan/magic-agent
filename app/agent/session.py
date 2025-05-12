@@ -4,8 +4,9 @@ Agent会话管理 - 处理Agent会话的创建、存储和恢复
 import os
 import json
 import asyncio
+import time
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 import uuid
@@ -40,6 +41,9 @@ class AgentSession:
         
         # 清理默认会话文件
         self._cleanup_default_session()
+        
+        # 清理过期会话文件
+        self._cleanup_expired_sessions()
 
     def _cleanup_default_session(self):
         """清理默认会话文件
@@ -64,6 +68,82 @@ class AgentSession:
                 logger.info("已删除默认Agent状态文件")
             except Exception as e:
                 logger.error(f"删除默认Agent状态文件失败: {e}", exc_info=True)
+                
+    def _cleanup_expired_sessions(self, max_age_days: int = 7):
+        """清理过期会话文件
+        
+        删除超过指定天数未活动的会话文件
+        
+        Args:
+            max_age_days: 最大保留天数，默认7天
+        """
+        logger.info(f"开始清理过期会话文件（超过{max_age_days}天未活动）")
+        
+        # 清理会话目录
+        count = 0
+        try:
+            now = datetime.now()
+            cutoff_date = now - timedelta(days=max_age_days)
+            
+            # 检查所有会话元数据文件
+            for metadata_file in Path(self.sessions_dir).glob("*.json"):
+                try:
+                    with open(metadata_file, 'r', encoding='utf-8') as f:
+                        metadata = json.load(f)
+                        
+                    # 检查最后活动时间
+                    last_active = metadata.get("last_active")
+                    if last_active:
+                        last_active_date = datetime.fromisoformat(last_active)
+                        if last_active_date < cutoff_date:
+                            # 会话过期，删除元数据文件
+                            session_id = metadata_file.stem
+                            # 同时删除对应的Agent状态文件
+                            data_dir = get_config("agent.data_dir", "data/agents")
+                            state_file = os.path.join(data_dir, f"{session_id}_state.json")
+                            
+                            if os.path.exists(state_file):
+                                os.remove(state_file)
+                                
+                            # 删除元数据文件
+                            os.remove(metadata_file)
+                            count += 1
+                            logger.debug(f"已删除过期会话: {session_id}")
+                except Exception as e:
+                    logger.error(f"处理会话文件失败: {metadata_file}, 错误: {e}")
+                    
+            logger.info(f"共清理了 {count} 个过期会话文件")
+        except Exception as e:
+            logger.error(f"清理过期会话文件失败: {e}", exc_info=True)
+            
+    def _cleanup_orphaned_state_files(self):
+        """清理孤立的状态文件
+        
+        删除没有对应会话元数据的Agent状态文件
+        """
+        logger.info("开始清理孤立的Agent状态文件")
+        
+        count = 0
+        try:
+            # 获取所有会话ID
+            session_ids = set()
+            for metadata_file in Path(self.sessions_dir).glob("*.json"):
+                session_ids.add(metadata_file.stem)
+                
+            # 检查所有状态文件
+            data_dir = get_config("agent.data_dir", "data/agents")
+            for state_file in Path(data_dir).glob("*_state.json"):
+                file_name = state_file.stem
+                if file_name.endswith("_state"):
+                    session_id = file_name[:-6]  # 移除"_state"后缀
+                    if session_id not in session_ids and session_id != "default":
+                        os.remove(state_file)
+                        count += 1
+                        logger.debug(f"已删除孤立的状态文件: {state_file}")
+                        
+            logger.info(f"共清理了 {count} 个孤立的状态文件")
+        except Exception as e:
+            logger.error(f"清理孤立状态文件失败: {e}", exc_info=True)
 
     async def create_session(
             self,
@@ -184,6 +264,16 @@ class AgentSession:
             except Exception as e:
                 logger.error(f"删除会话元数据失败: {e}", exc_info=True)
                 return False
+                
+        # 同时删除Agent状态文件
+        data_dir = get_config("agent.data_dir", "data/agents")
+        state_file = os.path.join(data_dir, f"{session_id}_state.json")
+        if os.path.exists(state_file):
+            try:
+                os.remove(state_file)
+                logger.debug(f"已删除会话状态文件: {session_id}")
+            except Exception as e:
+                logger.error(f"删除会话状态文件失败: {e}", exc_info=True)
 
         return True
 
@@ -271,3 +361,6 @@ class AgentSession:
 
         self.active_sessions.clear()
         logger.info("已清理所有活动会话")
+        
+        # 清理孤立的状态文件
+        self._cleanup_orphaned_state_files()

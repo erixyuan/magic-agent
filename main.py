@@ -101,27 +101,26 @@ async def main():
             sig, lambda: asyncio.create_task(cleanup(sig))
         )
 
-    # 创建Agent实例
-    logger.info('开始创建Agent实例...')
-    agent = await create_agent(config)
-    logger.info('Agent实例创建完成')
-    logger.debug(f'Agent状态: {agent.state.status}')
+    # 创建会话管理器
+    session_manager = AgentSession()
+    logger.info('会话管理器初始化完成')
 
-    # 运行Agent (设置超时时间)
+    # 运行Agent
     try:
-
-        # 创建会话管理器
-        session_manager = AgentSession()
         if args.no_cli:
             # 非交互模式
             session_id = args.session or str(uuid.uuid4())
+            logger.info(f'使用会话ID: {session_id}')
             agent = await session_manager.get_session(session_id)
             if not agent:
-                agent = await session_manager.create_session(session_id=session_id)
+                logger.info(f'创建新会话: {session_id}')
+                agent = await session_manager.create_session(session_id=session_id, config=config)
 
+            logger.info(f'开始运行Agent，会话ID: {session_id}')
             await agent.run()
         else:
             # 交互式CLI模式
+            logger.info('启动交互式CLI模式')
             cli = AgentCLI(
                 callback=agent_callback,
                 history_file="data/cli_history.txt"
@@ -134,7 +133,7 @@ async def main():
     finally:
         # 清理资源
         logger.info("开始清理资源...")
-        await agent.cleanup()
+        await cleanup()
 
     logger.info("AI Agent 系统已关闭")
 
